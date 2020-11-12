@@ -6,10 +6,11 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "accounts")
-public class Account {
+public class Account implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,9 +31,6 @@ public class Account {
     @Range(min = 0, max = 1)
     @Column(name = "status")
     private int status;
-
-    @OneToOne(mappedBy = "account")
-    private Trainer trainer;
 
     public Account() {
     }
@@ -77,11 +75,4 @@ public class Account {
         this.status = status;
     }
 
-    public Trainer getTrainer() {
-        return trainer;
-    }
-
-    public void setTrainer(Trainer trainer) {
-        this.trainer = trainer;
-    }
 }

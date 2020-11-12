@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class HorseServiceImpl implements HorseService {
     @Autowired
     private HorseRepository horseRepository;

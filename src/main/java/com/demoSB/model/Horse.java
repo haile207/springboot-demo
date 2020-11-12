@@ -1,8 +1,6 @@
 package com.demoSB.model;
 
 import org.hibernate.validator.constraints.Length;
-import sun.tools.jconsole.ProxyClient;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;

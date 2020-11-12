@@ -25,8 +25,6 @@ public class Trainer {
     @JoinColumn(name = "account_id", referencedColumnName = "id")
     private Account account;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "trainer")
-    private Set<Horse> horseSet;
 
     public Trainer() {
     }
@@ -53,14 +51,6 @@ public class Trainer {
 
     public void setAccount(Account account) {
         this.account = account;
-    }
-
-    public Set<Horse> getHorseSet() {
-        return horseSet;
-    }
-
-    public void setHorseSet(Set<Horse> horseSet) {
-        this.horseSet = horseSet;
     }
 
     public Trainer(Integer id,

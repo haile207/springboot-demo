@@ -1,4 +1,4 @@
-package dto;
+package com.dto;
 
 public class ApiResponse<T> {
     private int status;

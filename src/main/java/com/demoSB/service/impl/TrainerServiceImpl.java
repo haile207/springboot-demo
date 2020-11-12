@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class TrainerServiceImpl implements TrainerService<Trainer> {
     @Autowired
     private TrainerRepository trainerRepository;

@@ -1,4 +1,4 @@
-package dto;
+package com.dto;
 
 public class AccountForm {
     private String username;

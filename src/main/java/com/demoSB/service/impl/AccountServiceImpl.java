@@ -5,12 +5,15 @@ import com.demoSB.model.Account;
 import com.demoSB.repository.AccountRepository;
 import com.demoSB.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-
-public class AccountServiceImpl implements AccountService {
+@Service
+public class AccountServiceImpl implements AccountService, UserDetailsService {
     @Autowired
     private AccountRepository accountRepository;
 
@@ -37,5 +40,15 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account save(Account obj) {
         return accountRepository.save(obj);
+    }
+
+    @Override
+    public Optional<Account> findAccountByUsername(String username) {
+        return accountRepository.findAccountByUsername(username);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return (UserDetails) accountRepository.findAccountByUsername(username).get();
     }
 }
