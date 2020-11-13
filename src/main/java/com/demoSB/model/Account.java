@@ -19,7 +19,7 @@ public class Account implements Serializable {
 
     @NotNull
     @Length(min = 6, max = 50)
-    @Column(name = "username")
+    @Column(name = "username",unique = true)
     private String username;
 
     @NotNull

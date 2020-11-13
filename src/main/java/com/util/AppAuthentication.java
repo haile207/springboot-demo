@@ -2,27 +2,37 @@ package com.util;
 
 import com.demoSB.model.Account;
 import com.demoSB.service.AccountService;
+import javafx.util.Pair;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
 import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class AppAuthentication {
     @Autowired
-    private  AccountService accountService;
+    private AccountService accountService;
 
     @Autowired
-    private  StringTokenService stringTokenService;
+    private StringTokenService stringTokenService;
 
-    private static   AppAuthentication instance;
+    @Autowired
+    EntityManagerFactory emf;
 
-    private  Map<String, Integer> token;
+    private static AppAuthentication instance;
+
+    private Map<String, Integer> token;
 
     private AppAuthentication() {
         this.token = new HashMap<>();
@@ -46,13 +56,18 @@ public class AppAuthentication {
 //        return token.get(tokenKey).equals(accountId);
 //    }
 
-    public  Integer validateToken(String tokenKey) {
+    public Integer validateToken(String tokenKey) {
         return token.get(tokenKey);
     }
 
-    public  String authenticate(String username, String password) throws InvocationTargetException {
+    public String authenticate(String username, String password) throws InvocationTargetException {
         String pass = null;
         String token = null;
+        SessionFactory sessionFactory = emf.unwrap(SessionFactory.class);
+        Session session = sessionFactory.openSession();
+        NativeQuery query = session.createNativeQuery("select * from accounts a where username=:name");
+
+        Account rs = (Account) query.setParameter("name", username).uniqueResult();
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(password.getBytes());
@@ -63,7 +78,8 @@ public class AppAuthentication {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    Optional<Account> account = accountService.findAccountByUsername(username);
+
+        Optional<Account> account = accountService.findAccountByUsername(username);
 
         if (account.isPresent()) {
             if (account.get().getPassword().equals(pass)) {
@@ -75,11 +91,11 @@ public class AppAuthentication {
         return token;
     }
 
-    public  void addToken(String tokenKey, Integer accountId) {
+    public void addToken(String tokenKey, Integer accountId) {
         token.put(tokenKey, accountId);
     }
 
-    public  Integer deleteToken(String tokenKey) {
+    public Integer deleteToken(String tokenKey) {
         return token.remove(tokenKey);
     }
 }

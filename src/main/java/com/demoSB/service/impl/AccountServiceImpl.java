@@ -41,6 +41,6 @@ public class AccountServiceImpl implements AccountService{
 
     @Override
     public Optional<Account> findAccountByUsername(String username) {
-        return accountRepository.findAccountByUsername(username);
+        return accountRepository.findByUsername(username);
     }
 }
