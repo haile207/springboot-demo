@@ -3,27 +3,26 @@ package com.util;
 import com.demoSB.model.Account;
 import com.demoSB.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Component
 public class AppAuthentication {
     @Autowired
-    private static AccountService accountService;
+    private  AccountService accountService;
 
     @Autowired
-    private static StringTokenService stringTokenService;
+    private  StringTokenService stringTokenService;
 
-    private static AppAuthentication instance;
+    private static   AppAuthentication instance;
 
-    private static Map<String, Integer> token;
+    private  Map<String, Integer> token;
 
     private AppAuthentication() {
         this.token = new HashMap<>();
@@ -47,11 +46,11 @@ public class AppAuthentication {
 //        return token.get(tokenKey).equals(accountId);
 //    }
 
-    public static Integer validateToken(String tokenKey) {
+    public  Integer validateToken(String tokenKey) {
         return token.get(tokenKey);
     }
 
-    public static String authenticate(String username, String password) {
+    public  String authenticate(String username, String password) throws InvocationTargetException {
         String pass = null;
         String token = null;
         try {
@@ -61,10 +60,11 @@ public class AppAuthentication {
             pass = DatatypeConverter
                     .printHexBinary(digest).toUpperCase();
 
-        } catch (NoSuchAlgorithmException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        Optional<Account> account = accountService.findAccountByUsername(username);
+    Optional<Account> account = accountService.findAccountByUsername(username);
+
         if (account.isPresent()) {
             if (account.get().getPassword().equals(pass)) {
                 token = stringTokenService.createToken();
@@ -75,11 +75,11 @@ public class AppAuthentication {
         return token;
     }
 
-    public static void addToken(String tokenKey, Integer accountId) {
+    public  void addToken(String tokenKey, Integer accountId) {
         token.put(tokenKey, accountId);
     }
 
-    public static Integer deleteToken(String tokenKey) {
+    public  Integer deleteToken(String tokenKey) {
         return token.remove(tokenKey);
     }
 }

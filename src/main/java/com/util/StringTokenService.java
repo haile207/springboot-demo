@@ -1,8 +1,6 @@
 package com.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,17 +21,6 @@ public class StringTokenService {
     public static void addAuthentication(HttpServletResponse res, String username) {
         String tokenKey = getAlphaNumericString(TOKEN_LENGTH);
         res.addHeader(HEADER_STRING, tokenKey);
-    }
-
-    public static Authentication getAuthentication(HttpServletRequest request) {
-        String tokenKey = request.getHeader(HEADER_STRING);
-        if (tokenKey != null) {
-            // parse the token.
-            Integer user = appAuthentication.validateToken(tokenKey);
-
-            return user != null ? new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList()) : null;
-        }
-        return null;
     }
 
     public String createToken() {

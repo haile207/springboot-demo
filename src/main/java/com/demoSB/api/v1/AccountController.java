@@ -4,14 +4,19 @@ import com.demoSB.model.Account;
 import com.demoSB.service.AccountService;
 import com.dto.AccountForm;
 import com.dto.ApiResponse;
+import com.dto.LoginForm;
+import com.util.AppAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @RestController
@@ -25,6 +30,7 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
+
     @GetMapping(value = "all")
     public ResponseEntity<ApiResponse<Iterable<Account>>> getAllAccount() {
         ApiResponse<Iterable<Account>> response = new ApiResponse<>();
@@ -32,6 +38,65 @@ public class AccountController {
         response.setStatus(20);
         response.setData(accounts);
         response.setMessage("Loaded all accounts.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "login")
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginForm loginForm) {
+        ApiResponse<String> response = new ApiResponse<>();
+        AppAuthentication authentication = AppAuthentication.getInstance();
+        String tokenKey = null;
+        try {
+            tokenKey = authentication.authenticate(loginForm.getUsername(), loginForm.getPassword());
+        } catch (InvocationTargetException e) {
+            e.getCause().printStackTrace();
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        response.setData(tokenKey);
+        if (response.getData() == null) {
+            response.setMessage("Invalidated login information.");
+            response.setStatus(32);
+        } else {
+            response.setMessage("Signed in successfully.");
+            response.setStatus(21);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "changePassword")
+    public ResponseEntity<ApiResponse<Boolean>> changePassword(HttpServletRequest request, @RequestBody String newPassword) {
+        ApiResponse<Boolean> response = new ApiResponse<>();
+        if (!isValidPassword(newPassword)) {
+            response.setStatus(31);
+            response.setData(false);
+            response.setMessage("Invalid password.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        AppAuthentication authentication = AppAuthentication.getInstance();
+        String tokenKey = request.getHeader("Authorization");
+        Integer id = authentication.validateToken(tokenKey);
+        if (id != null) {
+            Account account = null;
+            Optional<Account> acc = accountService.findOneById(id);
+            String pass = passwordIntoMd5(newPassword);
+            if (acc.isPresent() && pass != null) {
+                account = acc.get();
+                account.setPassword(pass);
+                accountService.save(account);
+                response.setMessage("Changed password Successfully.");
+                response.setData(true);
+                response.setStatus(20);
+            } else {
+                response.setMessage("Changed password Failed.");
+                response.setData(false);
+                response.setStatus(51);
+            }
+        }else {
+            response.setMessage("Invalidated user.");
+            response.setData(false);
+            response.setStatus(31);
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -51,11 +116,33 @@ public class AccountController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        //Change password into MD5 code
+
+        String pass = passwordIntoMd5(accountForm.getPassword());
+        Account acc = null;
+        if (pass != null) {
+            //Call service to save new Account to database
+            acc = accountService.save(new Account(
+                    accountForm.getUsername(),
+                    passwordIntoMd5(accountForm.getPassword()),
+                    accountForm.getStatus()
+            ));
+            response.setStatus(20);
+            response.setMessage("Account was created successfully.");
+        } else {
+            response.setMessage("Error! Encrypted password failed.");
+            response.setStatus(51);
+        }
+
+        response.setData(acc);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String passwordIntoMd5(String password) {
         String pass = null;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(accountForm.getPassword().getBytes());
+            md.update(password.getBytes());
             byte[] digest = md.digest();
             pass = DatatypeConverter
                     .printHexBinary(digest).toUpperCase();
@@ -63,17 +150,7 @@ public class AccountController {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        //Call service to save new Account to database
-        Account acc = accountService.save(new Account(
-                accountForm.getUsername(),
-                pass,
-                accountForm.getStatus()
-        ));
-        response.setStatus(20);
-        response.setData(acc);
-        response.setMessage("Account was created successfully.");
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return pass;
     }
 
 
